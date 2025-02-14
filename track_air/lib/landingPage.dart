@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:track_air/ParametrePage.dart';
 import 'package:track_air/StartPage.dart';
+import 'package:track_air/HistoricAndStat.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -68,7 +69,7 @@ class LandingPage extends StatelessWidget {
                     // Military-styled buttons
                     _buildButton(
                       context,
-                      'Start Game',
+                      'Commencer la partie',
                       Icons.play_arrow_rounded,
                       const Color(0xFF7D8B69), // Light olive
                       () => Navigator.push(context,
@@ -77,16 +78,16 @@ class LandingPage extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildButton(
                       context,
-                      'History & Statistics',
+                      'Historique & Statistiques',
                       Icons.bar_chart_rounded,
                       const Color(0xFF656D4A), // Military green
                       () => Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => const Startpage())),
+                          MaterialPageRoute(builder: (context) => const HistoricAndStat())),
                     ),
                     const SizedBox(height: 20),
                     _buildButton(
                       context,
-                      'Settings',
+                      'Paramètres',
                       Icons.settings_rounded,
                       const Color(0xFF4B5842), // Dark olive
                       () => Navigator.push(context,

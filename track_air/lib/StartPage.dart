@@ -231,17 +231,28 @@ class _StartpageState extends State<Startpage> {
                       );
                     }
                   : null, // Disable button if no preset is selectedconst Icon(Icons.add),
-              label: const Text('Add New Preset'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              icon: const Icon(Icons.play_arrow, color: Colors.white),
+              label: const Text(
+                'Start Game',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            )        
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
+            ),
+            const SizedBox(height: 12),        
           ],
         ),
       ),
