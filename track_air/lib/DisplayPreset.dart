@@ -279,7 +279,7 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
    children: [
     Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.only(bottom: 30.0),
         child: _isErgonomicMode
             ? Center( )
             : GridView.builder(
@@ -311,7 +311,7 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
       Padding(
         padding: const EdgeInsets.only(right: 20.0, bottom: 15.0), // Décale à gauche et monte un peu
         child: Transform.translate(
-        offset: const Offset(-28, 0), // Vers la gauche (-X) et vers le haut (-Y)
+        offset: const Offset(-28, -10), // Vers la gauche (-X) et vers le haut (-Y)
         child: GestureDetector(
           onTap: rldMagazine,
           child: Container(
