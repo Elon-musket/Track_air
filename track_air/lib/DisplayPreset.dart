@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart'; 
 
 class Magazine {
@@ -68,16 +69,33 @@ class MagazineDisplay extends StatefulWidget {
 class _MagazineDisplayState extends State<MagazineDisplay> {
   late List<Magazine> magazinesList;
   int? selectedIndex;
+  int _currentMagazineIndex = 0;
+  bool _isErgonomicMode = false;
+  static const String _ergonomicModeKey = 'ergonomicMode';
 
-  @override
-  void initState() {
-    super.initState();
-    magazinesList = widget.preset.getMagazinesList();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+ @override
+ void initState() {
+  super.initState();
+  magazinesList = widget.preset.getMagazinesList();
+  _loadSettings(); // Load ergonomic mode
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+ }
+
+  void rldMagazine() {
+  setState(() {
+    _currentMagazineIndex = (_currentMagazineIndex + 1) % magazinesList.length;
+  });
   }
+
+ Future<void> _loadSettings() async {
+  final prefs = await SharedPreferences.getInstance();
+  setState(() {
+    _isErgonomicMode = prefs.getBool(_ergonomicModeKey) ?? false;
+  });
+ }
 
   @override
   void dispose() {
@@ -193,16 +211,9 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
                     Text(
                       '${magazine.currentCapacity}',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: isSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    Text(
-                      '/${magazine.capacity}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isSelected ? Colors.white70 : Colors.black54,
                       ),
                     ),
                   ],
@@ -229,14 +240,49 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 40,
         title: Text(widget.preset.name),
+        actions: [
+         Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _isErgonomicMode ? Colors.green.withOpacity(0.2) : Colors.blue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isErgonomicMode ? Icons.accessibility_new : Icons.details,
+                      size: 16,
+                      color: _isErgonomicMode ? Colors.green : Colors.blue,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _isErgonomicMode ? 'Ergonomic' : 'Detailed',
+                      style: TextStyle(
+                        color: _isErgonomicMode ? Colors.green : Colors.blue,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GridView.builder(
+  body: Column(
+   children: [
+    Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _isErgonomicMode
+            ? Center( )
+            : GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 5,
                   mainAxisSpacing: 16.0,
@@ -247,35 +293,71 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
                   return _buildMagazine(magazinesList[index], index);
                 },
               ),
-            ),
-          ),
-          if (selectedIndex != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton(
-                onPressed: _decrementCapacity,
-                child: const Text('FIRE (-1)'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // Handle end game button press
-              },
-              child: const Text('BOUTON FIN DE PARTIE'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[100],
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
-          ),
-        ],
       ),
+    ),
+    if (_isErgonomicMode)
+  Row(
+    children: [
+      // Chargeur à gauche, plus grand
+      Expanded(
+        child: Center(
+          child: Transform.scale(
+            scale: 2.75, // Agrandit le chargeur
+            child: _buildMagazine(magazinesList[_currentMagazineIndex], _currentMagazineIndex),
+          ),
+        ),
+      ),
+      // Bouton à droite, plus gros
+      Padding(
+        padding: const EdgeInsets.only(right: 20.0, bottom: 15.0), // Décale à gauche et monte un peu
+        child: Transform.translate(
+        offset: const Offset(-28, 0), // Vers la gauche (-X) et vers le haut (-Y)
+        child: GestureDetector(
+          onTap: rldMagazine,
+          child: Container(
+            width: 300, // Plus large
+            height: 300, // Plus haut
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 4,
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              'Recharger',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24, // Texte plus gros
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        ),
+      ),
+    ],
+  ),
+    if (selectedIndex != null)
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: ElevatedButton(
+          onPressed: _decrementCapacity,
+          child: const Text('FIRE (-1)'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange,
+            minimumSize: const Size(double.infinity, 50),
+          ),
+        ),
+      ),
+     ],
+    ),
     );
   }
 }

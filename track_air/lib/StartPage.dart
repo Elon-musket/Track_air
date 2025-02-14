@@ -61,7 +61,7 @@ class _StartpageState extends State<Startpage> {
     ]);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Game configuration'),
+        title: const Text('Configuration Partie'),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
