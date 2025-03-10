@@ -20,7 +20,39 @@ class _StartpageState extends State<Startpage> {
   String? selectedPresetName;
   Map<String, dynamic>? selectedPreset;
   bool _isErgonomicMode = false;
+  String _selectedLanguage = 'English';
   static const String _ergonomicModeKey = 'ergonomicMode';
+  static const String _languageKey = 'language';
+
+  // Text translations
+  late Map<String, Map<String, String>> _translations = {
+    'English': {
+      'appBarTitle': 'Game configuration',
+      'selectPreset': 'Select Preset:',
+      'noPresets': 'No presets available. Create one by clicking the button below.',
+      'choosePreset': 'Choose a preset',
+      'preset': 'Preset:',
+      'created': 'Created:',
+      'magazineCapacities': 'Magazine Capacities:',
+      'addNewPreset': 'Add New Preset',
+      'startGame': 'Start Game',
+    },
+    'French': {
+      'appBarTitle': 'Configuration Partie',
+      'selectPreset': 'Sélectionner un préréglage:',
+      'noPresets': 'Aucun préréglage disponible. Créez-en un en cliquant sur le bouton ci-dessous.',
+      'choosePreset': 'Choisir un préréglage',
+      'preset': 'Préréglage:',
+      'created': 'Créé:',
+      'magazineCapacities': 'Capacités des magasins:',
+      'addNewPreset': 'Ajouter un nouveau préréglage',
+      'startGame': 'Démarrer le jeu',
+    },
+  };
+
+  String getText(String key) {
+    return _translations[_selectedLanguage]?[key] ?? key;
+  }
 
   @override
   void initState() {
@@ -33,6 +65,7 @@ class _StartpageState extends State<Startpage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isErgonomicMode = prefs.getBool(_ergonomicModeKey) ?? false;
+      _selectedLanguage = prefs.getString(_languageKey) ?? 'English';
     });
   }
 
@@ -61,7 +94,7 @@ class _StartpageState extends State<Startpage> {
     ]);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configuration Partie'),
+        title: Text(getText('appBarTitle')),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -107,18 +140,18 @@ class _StartpageState extends State<Startpage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Select Preset:',
-                      style: TextStyle(
+                    Text(
+                      getText('selectPreset'),
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     if (presets.isEmpty)
-                      const Text(
-                        'No presets available. Create one by clicking the button below.',
-                        style: TextStyle(
+                      Text(
+                        getText('noPresets'),
+                        style: const TextStyle(
                           fontStyle: FontStyle.italic,
                           color: Colors.grey,
                         ),
@@ -130,7 +163,7 @@ class _StartpageState extends State<Startpage> {
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         ),
                         value: selectedPresetName,
-                        hint: const Text('Choose a preset'),
+                        hint: Text(getText('choosePreset')),
                         onChanged: (String? newValue) {
                           setState(() {
                             selectedPresetName = newValue;
@@ -161,25 +194,23 @@ class _StartpageState extends State<Startpage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Preset: ${selectedPreset!['presetName']}',
+                        '${getText('preset')} ${selectedPreset!['presetName']}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      
-                      // Then replace the Text widget with:
                       Text(
-                        'Created: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(selectedPreset!['createdAt']).toLocal())}',
+                        '${getText('created')} ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(selectedPreset!['createdAt']).toLocal())}',
                         style: const TextStyle(
                           color: Colors.grey,
                         ),
                       ),
                       const Divider(),
-                      const Text(
-                        'Magazine Capacities:',
-                        style: TextStyle(
+                      Text(
+                        getText('magazineCapacities'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -204,7 +235,7 @@ class _StartpageState extends State<Startpage> {
                 _loadPresets();
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add New Preset'),
+              label: Text(getText('addNewPreset')),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -232,9 +263,9 @@ class _StartpageState extends State<Startpage> {
                     }
                   : null, // Disable button if no preset is selectedconst Icon(Icons.add),
               icon: const Icon(Icons.play_arrow, color: Colors.white),
-              label: const Text(
-                'Start Game',
-                style: TextStyle(
+              label: Text(
+                getText('startGame'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -252,7 +283,7 @@ class _StartpageState extends State<Startpage> {
                 elevation: 4,
               ),
             ),
-            const SizedBox(height: 12),        
+            const SizedBox(height: 12),
           ],
         ),
       ),
