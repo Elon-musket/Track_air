@@ -62,7 +62,14 @@ flutter:
   assets:
     - assets/
     - assets/magazine.png
-    - assets/magazine.svg
+    - assets/MagazineEmpty.png
+    - assets/magazineSlicyFull.png
+    - assets/MagazineAlmostMid.png
+    - assets/MagazineAlmostVeryEmpty.png
+    - assets/magazineSlicyFull.png
+    - assets/MagazineMid.png
+    - assets/magazineBelowMid.png
+    - assets/magazineFull.png
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

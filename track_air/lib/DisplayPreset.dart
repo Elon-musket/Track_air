@@ -1,6 +1,8 @@
-import 'dart:ui';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 
@@ -73,6 +75,10 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
   String _selectedLanguage = 'English';
   static const String _ergonomicModeKey = 'ergonomicMode';
   static const String _languageKey = 'language';
+  Timer? _holdTimer;
+  static const int _holdDuration = 3; // Duration in seconds
+  double _holdProgress = 0.0;
+  bool _isBottomSheetOpen = false;
 
   // Text translations
   final Map<String, Map<String, String>> _translations = {
@@ -81,13 +87,27 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
       'detailed': 'Detailed',
       'reload': 'Reload',
       'fire': 'FIRE (-1)',
+      'endGame': 'End Game',
     },
     'French': {
       'ergonomic': 'Ergonomique',
       'detailed': 'Détaillé',
       'reload': 'Recharger',
       'fire': 'TIRER (-1)',
+      'endGame': 'Fin de Partie',
     },
+  };
+
+  // Map capacity ranges to image assets
+  final Map<String, String> _capacityImages = {
+    'empty': 'assets/MagazineEmpty.png',
+    'MagazineAlmostVeryEmpty': 'assets/MagazineAlmostVeryEmpty.png',
+    'MagazineAlmostEmpty': 'assets/MagazineAlmostEmpty.png',
+    'Belowmid': 'assets/magazineBelowMid.png',
+    'mid': 'assets/MagazineMid.png',
+    'Almostmid': 'assets/MagazineAlmostMid.png',
+    'SlcyHigh': 'assets/magazineSlicyFull.png',
+    'high': 'assets/magazineFull.png',
   };
 
   String getText(String key) {
@@ -126,6 +146,7 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    _holdTimer?.cancel();
     super.dispose();
   }
 
@@ -138,17 +159,6 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
           _vibrateOnEmpty();
         }
       });
-    }
-  }
-
-  // Function to get the color based on remaining capacity
-  Color _getCapacityColor(double remainingPercentage) {
-    if (remainingPercentage > 66) {
-      return Colors.green;
-    } else if (remainingPercentage > 33) {
-      return Colors.orange;
-    } else {
-      return Colors.red;
     }
   }
 
@@ -175,50 +185,119 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
     });
   }
 
+  // Function to get the image based on remaining capacity
+  String _getImageForCapacity(double remainingPercentage) {
+    if (remainingPercentage == 0) {
+      return _capacityImages['empty']!;
+    } else if (remainingPercentage < 10) {
+      return _capacityImages['MagazineAlmostVeryEmpty']!;
+    }
+    else if (remainingPercentage < 20) {
+      return _capacityImages['MagazineAlmostEmpty']!;
+    }
+    else if (remainingPercentage < 40) {
+      return _capacityImages['Belowmid']!;
+    }
+    else if (remainingPercentage < 50) {
+      return _capacityImages['mid']!;
+    }
+    else if (remainingPercentage < 65) {
+      return _capacityImages['Almostmid']!;
+    }
+    else if (remainingPercentage < 85){
+      return _capacityImages['SlcyHigh']!;
+    }
+    else {
+      return _capacityImages['high']!;
+    }
+  }
+
   Widget _buildMagazine(Magazine magazine, int index) {
     final isSelected = index == selectedIndex;
     final remainingPercentage = magazine.remainingPercentage;
-    final capacityColor = _getCapacityColor(remainingPercentage);
+    final imagePath = _getImageForCapacity(remainingPercentage);
 
     return GestureDetector(
       onTap: () => _selectMagazine(index),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Image in the background
+          // Image based on capacity
           Image.asset(
-            'assets/magazine.png', // Replace with your image path
+            imagePath,
             width: 100,
             height: 150,
             fit: BoxFit.cover,
-          ),
-          // Transparent container with gradient
-          ClipPath(
-            clipper: GradientClipper(),
-            child: Container(
-              width: 100,
-              height: 150,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [capacityColor, Colors.transparent],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                ),
-              ),
-            ),
           ),
           // Text overlay
           Text(
             '${magazine.currentCapacity}',
             style: TextStyle(
-              fontSize: 30,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.black,
+              color: isSelected ? Colors.black : Colors.white,
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _startHoldTimer() {
+    _holdTimer?.cancel();
+    _holdProgress = 0.0;
+    setState(() {});
+    _holdTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      setState(() {
+        _holdProgress += 0.1;
+        if (_holdProgress >= 1.0) {
+          _endGame();
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  void _cancelHoldTimer() {
+    _holdTimer?.cancel();
+    _holdProgress = 0.0;
+    setState(() {});
+  }
+
+  Future<void> _endGame() async {
+    int totalFired = magazinesList.fold(0, (sum, magazine) => sum + (magazine.capacity - magazine.currentCapacity));
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/game_stats.txt');
+      final stats = 'Total bullets fired: $totalFired\nDate: ${DateTime.now().toIso8601String()}\n';
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        await file.writeAsString('$content\n$stats');
+      } else {
+        await file.writeAsString(stats);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Game stats saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving game stats: $e')),
+        );
+      }
+    }
+  }
+
+  void _toggleBottomSheet() {
+    setState(() {
+      _isBottomSheetOpen = !_isBottomSheetOpen;
+    });
   }
 
   @override
@@ -262,104 +341,128 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 30.0),
-              child: _isErgonomicMode
-                  ? Center(
-                      child: Row(
-                        children: [
-                          // Larger magazine on the left
-                          Expanded(
-                            child: Center(
-                              child: Transform.scale(
-                                scale: 2.75, // Enlarge the magazine
-                                child: _buildMagazine(magazinesList[_currentMagazineIndex], _currentMagazineIndex),
-                              ),
-                            ),
-                          ),
-                          // Larger button on the right
-                          Padding(
-                            padding: const EdgeInsets.only(right: 20.0, bottom: 15.0), // Adjust positioning
-                            child: Transform.translate(
-                              offset: const Offset(-28, -10), // Adjust positioning
-                              child: GestureDetector(
-                                onTap: rldMagazine,
-                                child: Container(
-                                  width: 300, // Larger
-                                  height: 300, // Taller
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        spreadRadius: 4,
-                                        blurRadius: 8,
-                                      ),
-                                    ],
+          Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 30.0),
+                  child: _isErgonomicMode
+                      ? Center(
+                          child: Row(
+                            children: [
+                              // Larger magazine on the left
+                              Expanded(
+                                child: Center(
+                                  child: Transform.scale(
+                                    scale: 3.75, // Enlarge the magazine
+                                    child: _buildMagazine(magazinesList[_currentMagazineIndex], _currentMagazineIndex),
                                   ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    getText('reload'),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 24, // Larger text
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                ),
+                              ),
+                              // Larger button on the right
+                              Padding(
+                                padding: const EdgeInsets.only(right: 25.0, bottom: 10.0), // Adjust positioning
+                                child: Transform.translate(
+                                  offset: const Offset(-28, -10), // Adjust positioning
+                                  child: GestureDetector(
+                                    onTap: rldMagazine,
+                                    child: Container(
+                                      width: 250, // Larger
+                                      height: 250, // Taller
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            spreadRadius: 4,
+                                            blurRadius: 8,
+                                          ),
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        getText('reload'),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 24, // Larger text
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    )
-                  : GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5,
-                        mainAxisSpacing: 16.0,
-                        crossAxisSpacing: 16.0,
-                      ),
-                      itemCount: magazinesList.length,
-                      itemBuilder: (context, index) {
-                        return _buildMagazine(magazinesList[index], index);
+                        )
+                      : GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            mainAxisSpacing: 16.0,
+                            crossAxisSpacing: 16.0,
+                          ),
+                          itemCount: magazinesList.length,
+                          itemBuilder: (context, index) {
+                            return _buildMagazine(magazinesList[index], index);
+                          },
+                        ),
+                ),
+              ),
+            ],
+          ),
+          if (_isBottomSheetOpen)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      spreadRadius: 4,
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    ListTile(
+                      leading: Icon(Icons.exit_to_app),
+                      title: Text(getText('endGame')),
+                      onTap: () {
+                        _startHoldTimer();
                       },
                     ),
-            ),
-          ),
-          if (selectedIndex != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton(
-                onPressed: _decrementCapacity,
-                child: Text(getText('fire')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  minimumSize: const Size(double.infinity, 50),
+                    if (selectedIndex != null)
+                      ListTile(
+                        leading: Icon(Icons.local_fire_department),
+                        title: Text(getText('fire')),
+                        onTap: () {
+                          _decrementCapacity();
+                        },
+                      ),
+                  ],
                 ),
               ),
             ),
+          Positioned(
+            bottom: 16.0,
+            right: 16.0,
+            child: FloatingActionButton(
+              onPressed: _toggleBottomSheet,
+              child: Icon(_isBottomSheetOpen ? Icons.close : Icons.menu),
+            ),
+          ),
         ],
       ),
     );
-  }
-}
-
-// Custom clipper to clip the gradient shape
-class GradientClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) {
-    return false;
   }
 }

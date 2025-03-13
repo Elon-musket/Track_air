@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PresetFormPage extends StatefulWidget {
   const PresetFormPage({super.key});
@@ -15,11 +16,58 @@ class _PresetFormPageState extends State<PresetFormPage> {
   final _presetNameController = TextEditingController();
   final List<TextEditingController> _magazineControllers = [];
   static const int maxMagazines = 10;
+  String _selectedLanguage = 'English';
+
+  // Text translations
+  late Map<String, Map<String, String>> _translations = {
+    'English': {
+      'appBarTitle': 'Add New Preset',
+      'presetNameLabel': 'Preset Name',
+      'magazinesTitle': 'Magazines',
+      'magazineLabel': 'Magazine',
+      'Capacity': 'Capacity',
+      'rounds': 'rounds',
+      'addMagazine': 'Add Magazine',
+      'savePreset': 'Save Preset',
+      'enterPresetName': 'Please enter a preset name',
+      'enterCapacity': 'Please enter capacity',
+      'validNumber': 'Please enter a valid number',
+      'presetSaved': 'Preset saved successfully!',
+      'errorSaving': 'Error saving preset:',
+    },
+    'French': {
+      'appBarTitle': 'Ajouter un nouveau préréglage',
+      'presetNameLabel': 'Nom du préréglage',
+      'magazinesTitle': 'Chargeurs',
+      'magazineLabel': 'Chargeur',
+      'rounds': 'bille(s)',
+      'Capacity': 'Capicité',
+      'addMagazine': 'Ajouter un magazine',
+      'savePreset': 'Enregistrer le préréglage',
+      'enterPresetName': 'Veuillez entrer un nom de préréglage',
+      'enterCapacity': 'Veuillez entrer la capacité',
+      'validNumber': 'Veuillez entrer un nombre valide',
+      'presetSaved': 'Préréglage enregistré avec succès !',
+      'errorSaving': 'Erreur lors de l\'enregistrement du préréglage :',
+    },
+  };
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _addMagazineField();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'English';
+    });
+  }
+
+  String getText(String key) {
+    return _translations[_selectedLanguage]?[key] ?? key;
   }
 
   void _addMagazineField() {
@@ -54,7 +102,7 @@ class _PresetFormPageState extends State<PresetFormPage> {
         // Get the application documents directory
         final directory = await getApplicationDocumentsDirectory();
         final file = File('${directory.path}/presets.json');
-        
+
         Map<String, dynamic> jsonContent;
         if (await file.exists()) {
           final content = await file.readAsString();
@@ -67,17 +115,17 @@ class _PresetFormPageState extends State<PresetFormPage> {
         }
 
         await file.writeAsString(json.encode(jsonContent));
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Preset saved successfully!')),
+            SnackBar(content: Text(getText('presetSaved'))),
           );
           Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error saving preset: $e')),
+            SnackBar(content: Text('${getText('errorSaving')} $e')),
           );
         }
       }
@@ -88,7 +136,7 @@ class _PresetFormPageState extends State<PresetFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Preset'),
+        title: Text(getText('appBarTitle')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -98,20 +146,20 @@ class _PresetFormPageState extends State<PresetFormPage> {
             children: [
               TextFormField(
                 controller: _presetNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Preset Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: getText('presetNameLabel'),
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a preset name';
+                    return getText('enterPresetName');
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 24),
               Text(
-                'Magazines (${_magazineControllers.length}/$maxMagazines)',
+                '${getText('magazinesTitle')} (${_magazineControllers.length}/$maxMagazines)',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
@@ -121,7 +169,7 @@ class _PresetFormPageState extends State<PresetFormPage> {
                 ElevatedButton.icon(
                   onPressed: _addMagazineField,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Magazine'),
+                  label: Text(getText('addMagazine')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
@@ -136,7 +184,7 @@ class _PresetFormPageState extends State<PresetFormPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Save Preset'),
+                child: Text(getText('savePreset')),
               ),
             ],
           ),
@@ -155,18 +203,18 @@ class _PresetFormPageState extends State<PresetFormPage> {
               child: TextFormField(
                 controller: _magazineControllers[index],
                 decoration: InputDecoration(
-                  labelText: 'Magazine ${index + 1} Capacity',
+                  labelText: '${getText('magazineLabel')} ${index + 1} ${getText('Capacity')}',
                   border: const OutlineInputBorder(),
-                  suffixText: 'rounds',
+                  suffixText: getText('rounds'),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter capacity';
+                    return getText('enterCapacity');
                   }
                   final number = int.tryParse(value);
                   if (number == null || number <= 0 || number > 9999) {
-                    return 'Please enter a valid number';
+                    return getText('validNumber');
                   }
                   return null;
                 },
