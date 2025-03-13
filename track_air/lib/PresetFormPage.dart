@@ -50,6 +50,21 @@ class _PresetFormPageState extends State<PresetFormPage> {
       'presetSaved': 'Préréglage enregistré avec succès !',
       'errorSaving': 'Erreur lors de l\'enregistrement du préréglage :',
     },
+    'Spanish': {
+      'appBarTitle': 'Agregar una nueva configuración',
+      'presetNameLabel': 'Nombre de la configuración',
+      'magazinesTitle': 'Cargadores',
+      'magazineLabel': 'Cargador',
+      'rounds': 'bala(s)',
+      'Capacity': 'Capacidad',
+      'addMagazine': 'Agregar un cargador',
+      'savePreset': 'Guardar configuración',
+      'enterPresetName': 'Por favor, introduzca un nombre para la configuración',
+      'enterCapacity': 'Por favor, introduzca la capacidad',
+      'validNumber': 'Por favor, introduzca un número válido',
+      'presetSaved': '¡Configuración guardada con éxito!',
+      'errorSaving': 'Error al guardar la configuración:',
+    }
   };
 
   @override
@@ -62,7 +77,7 @@ class _PresetFormPageState extends State<PresetFormPage> {
   Future<void> _loadLanguage() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedLanguage = prefs.getString('language') ?? 'English';
+      _selectedLanguage = prefs.getString('language') ?? 'English' ?? 'Spanish';
     });
   }
 

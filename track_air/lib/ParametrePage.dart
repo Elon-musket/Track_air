@@ -30,6 +30,13 @@ class _ParametrePageState extends State<ParametrePage> {
       'languageTitle': 'Langue',
       'currentLanguage': 'Langue actuelle',
     },
+    'Spanish': {
+      'appBarTitle': 'Parámetros',
+      'ergonomicModeTitle': 'Mode Ergonómico',
+      'ergonomicModeSubtitle': 'Alternar entre vista ergonómica y detallada',
+      'languageTitle': 'Idioma',
+      'currentLanguage': 'Idioma actual',
+    },
   };
 
   String get _getTranslatedText => _selectedLanguage;
@@ -48,7 +55,7 @@ class _ParametrePageState extends State<ParametrePage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isErgonomicMode = prefs.getBool(_ergonomicModeKey) ?? false;
-      _selectedLanguage = prefs.getString(_languageKey) ?? 'English';
+      _selectedLanguage = prefs.getString(_languageKey) ?? 'English' ?? 'Spanish';
     });
   }
 
@@ -100,6 +107,10 @@ class _ParametrePageState extends State<ParametrePage> {
                   DropdownMenuItem(
                     value: 'French',
                     child: Text('Français'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Spanish',
+                    child: Text('Español'),
                   ),
                 ],
                 onChanged: (String? newValue) {

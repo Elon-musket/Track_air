@@ -96,6 +96,13 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
       'fire': 'TIRER (-1)',
       'endGame': 'Fin de Partie',
     },
+    'Spanish': {
+      'ergonomic': 'Ergonómico',
+      'detailed': 'Detallado',
+      'reload': 'Recargar',
+      'fire': 'DISPARAR (-1)',
+      'endGame': 'Fin del juego',
+    },
   };
 
   // Map capacity ranges to image assets
@@ -135,7 +142,7 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isErgonomicMode = prefs.getBool(_ergonomicModeKey) ?? false;
-      _selectedLanguage = prefs.getString(_languageKey) ?? 'English';
+      _selectedLanguage = prefs.getString(_languageKey) ?? 'English' ?? 'Spanish';
     });
   }
 

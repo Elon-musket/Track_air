@@ -27,6 +27,12 @@ class _LandingPageState extends State<LandingPage> {
       'historyStats': 'Historique & Statistiques',
       'settings': 'Paramètres',
     },
+    'Spanish': {
+      'startGame': 'Comenzar juego',
+      'historyStats': 'Historial & Estadísticas',
+      'settings': 'Configuración',
+    },
+
   };
 
   @override
@@ -45,7 +51,7 @@ class _LandingPageState extends State<LandingPage> {
   Future<void> _loadLanguage() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedLanguage = prefs.getString(_languageKey) ?? 'English';
+      _selectedLanguage = prefs.getString(_languageKey) ?? 'English' ?? 'Spanish';
     });
   }
 

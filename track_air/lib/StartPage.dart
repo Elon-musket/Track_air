@@ -48,6 +48,17 @@ class _StartpageState extends State<Startpage> {
       'addNewPreset': 'Ajouter un nouveau préréglage',
       'startGame': 'Démarrer le jeu',
     },
+    'Spanish': {
+      'appBarTitle': 'Configuración del juego',
+      'selectPreset': 'Seleccionar una configuración preestablecida:',
+      'noPresets': 'No hay configuraciones disponibles. Cree una haciendo clic en el botón a continuación.',
+      'choosePreset': 'Elegir una configuración',
+      'preset': 'Configuración:',
+      'created': 'Creado:',
+      'magazineCapacities': 'Capacidades de los cargadores:',
+      'addNewPreset': 'Agregar una nueva configuración',
+      'startGame': 'Iniciar el juego',
+    },
   };
 
   String getText(String key) {
@@ -65,7 +76,7 @@ class _StartpageState extends State<Startpage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isErgonomicMode = prefs.getBool(_ergonomicModeKey) ?? false;
-      _selectedLanguage = prefs.getString(_languageKey) ?? 'English';
+      _selectedLanguage = prefs.getString(_languageKey) ?? 'English' ?? 'Spanish';
     });
   }
 

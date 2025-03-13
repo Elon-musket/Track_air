@@ -35,6 +35,11 @@ class _HistoricAndStatState extends State<HistoricAndStat> {
       'totalBulletsFired': 'Total de Bille(s) Tirées',
       'otherStat': 'Autre Stat',
     },
+    'Spanish': {
+      'name': "Historial y Estadísticas",
+      'totalBulletsFired': 'Total de Balas Disparadas',
+      'otherStat': 'Otra Estadística',
+    },
   };
 
   @override
@@ -75,7 +80,7 @@ class _HistoricAndStatState extends State<HistoricAndStat> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedLanguage = prefs.getString(_languageKey) ?? 'English';
+      _selectedLanguage = prefs.getString(_languageKey) ?? 'English' ?? 'Spanish';
     });
   }
 
@@ -327,21 +332,7 @@ class _HistoricAndStatState extends State<HistoricAndStat> {
           Container(
             color: camoColors[3], // Use the fourth camouflage color
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              child: Text(
-                '...',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ),
-          Container(
-            color: camoColors[0], // Use the first camouflage color
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.7, horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(vertical: 15.70, horizontal: 16.0),
               child: Text(
                 '...',
                 style: const TextStyle(
