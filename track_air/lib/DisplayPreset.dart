@@ -356,7 +356,7 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
                               Expanded(
                                 child: Center(
                                   child: Transform.scale(
-                                    scale: 3.75, // Enlarge the magazine
+                                    scale: 2.25, // Enlarge the magazine
                                     child: _buildMagazine(magazinesList[_currentMagazineIndex], _currentMagazineIndex),
                                   ),
                                 ),
@@ -365,7 +365,7 @@ class _MagazineDisplayState extends State<MagazineDisplay> {
                               Padding(
                                 padding: const EdgeInsets.only(right: 25.0, bottom: 10.0), // Adjust positioning
                                 child: Transform.translate(
-                                  offset: const Offset(-28, -10), // Adjust positioning
+                                  offset: const Offset(-68, 10), // Adjust positioning
                                   child: GestureDetector(
                                     onTap: rldMagazine,
                                     child: Container(

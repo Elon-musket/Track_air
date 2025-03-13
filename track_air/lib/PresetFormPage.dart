@@ -213,7 +213,7 @@ class _PresetFormPageState extends State<PresetFormPage> {
                     return getText('enterCapacity');
                   }
                   final number = int.tryParse(value);
-                  if (number == null || number <= 0 || number > 9999) {
+                  if (number == null || number <= 0 || number > 999) {
                     return getText('validNumber');
                   }
                   return null;
